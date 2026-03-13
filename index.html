@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>中西区人口寻迹</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0e0b07;--sf:#1a1510;--sf2:#22201a;--bd:#2e2920;
+  --red:#d4341a;--red2:#ff5a3c;--gold:#c9972a;--gold2:#f0c050;
+  --cream:#f0ead8;--muted:#7a6e5c;--txt:#e8e0cc;
+  --green:#2d7a4a;--green2:#4aad6e;--wx:#07c160;
+  --fs:14px;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
+  font-family:'Noto Sans TC',sans-serif;font-size:var(--fs)}
+
+/* ── SPLASH ── */
+#splash{position:fixed;inset:0;z-index:9999;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px 22px;text-align:center;overflow-y:auto;
+  transition:opacity .5s,transform .5s}
+#splash.out{opacity:0;transform:scale(1.04);pointer-events:none}
+.sp-eye{font-size:.72em;letter-spacing:4px;text-transform:uppercase;color:var(--gold);
+  margin-bottom:14px;border:1px solid rgba(201,151,42,.3);padding:5px 14px;border-radius:20px}
+.sp-title{font-family:'DM Serif Display',serif;font-size:clamp(24px,7vw,38px);
+  line-height:1.15;color:var(--cream);margin-bottom:4px}
+.sp-title em{font-style:italic;color:var(--gold2)}
+.sp-sub{font-family:'Noto Serif TC',serif;font-size:.93em;
+  color:var(--muted);margin-bottom:18px;line-height:1.5}
+.sp-stats{display:flex;gap:22px;justify-content:center;margin-bottom:18px}
+.sp-stat .v{font-family:'DM Serif Display',serif;font-size:1.7em;color:var(--cream);display:block}
+.sp-stat .l{font-size:.64em;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block}
+.sp-desc{max-width:340px;font-size:.89em;line-height:1.85;color:var(--muted);margin-bottom:20px}
+.sp-lang{display:flex;gap:8px;justify-content:center;margin-bottom:18px}
+.lang-btn{background:var(--sf2);border:1px solid var(--bd);color:var(--muted);
+  border-radius:8px;padding:7px 16px;font-size:.93em;cursor:pointer;transition:all .2s;
+  font-family:'Noto Sans TC',sans-serif}
+.lang-btn.on{border-color:var(--gold);color:var(--gold);background:#1e1a10}
+.group-wrap{width:100%;max-width:300px;margin-bottom:20px}
+.group-label{font-size:.78em;letter-spacing:2px;text-transform:uppercase;color:var(--gold);
+  margin-bottom:8px;display:block;text-align:left}
+.group-input-row{display:flex;align-items:center;gap:10px;
+  background:var(--sf2);border:1.5px solid var(--gold);border-radius:10px;padding:10px 14px}
+.group-prefix{font-family:'Noto Serif TC',serif;font-size:1.07em;color:var(--cream);white-space:nowrap}
+.group-num{background:transparent;border:none;color:var(--gold2);
+  font-family:'DM Serif Display',serif;font-size:1.85em;font-weight:700;
+  width:60px;outline:none;text-align:center}
+.group-num::placeholder{color:#3a3020}
+.group-suffix{font-family:'Noto Serif TC',serif;font-size:1.07em;color:var(--cream)}
+.btn-start{background:var(--red);color:#fff;border:none;border-radius:12px;
+  padding:14px 44px;font-family:'Noto Serif TC',serif;font-size:1.14em;font-weight:700;
+  letter-spacing:2px;cursor:pointer;box-shadow:0 0 28px rgba(212,52,26,.4);transition:all .2s}
+.btn-start:active{transform:scale(.97)}
+.btn-start:disabled{background:#4a2010;box-shadow:none;cursor:not-allowed;opacity:.6}
+
+/* ── APP ── */
+#app{height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+#hdr{flex-shrink:0;background:var(--sf);border-bottom:1px solid var(--bd);
+  padding:7px 10px;display:flex;align-items:center;justify-content:space-between;z-index:100;gap:6px}
+.hdr-l{flex:1;min-width:0}
+.hdr-l h1{font-family:'Noto Serif TC',serif;font-size:.86em;font-weight:700;
+  color:var(--cream);letter-spacing:.8px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-l p{font-size:.57em;color:var(--muted);letter-spacing:.5px;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-r{display:flex;align-items:center;gap:4px;flex-shrink:0}
+#grpBadge{font-size:.71em;color:var(--gold);border:1px solid rgba(201,151,42,.4);
+  border-radius:6px;padding:2px 6px;white-space:nowrap;font-weight:700}
+#progPill{background:var(--red);color:#fff;font-size:.79em;font-weight:700;
+  padding:3px 8px;border-radius:20px;white-space:nowrap;transition:background .4s}
+#progPill.done{background:var(--green)}
+.hl-wrap{display:flex;gap:2px}
+.hl-btn{background:none;border:1px solid var(--bd);color:var(--muted);
+  border-radius:5px;padding:3px 5px;font-size:.68em;cursor:pointer;transition:all .2s;
+  font-family:'Noto Sans TC',sans-serif;white-space:nowrap}
+.hl-btn.on{border-color:var(--gold);color:var(--gold)}
+
+/* font size controls */
+.fs-wrap{display:flex;gap:2px;align-items:center}
+.fs-btn{background:var(--sf2);border:1px solid var(--bd);color:var(--muted);
+  border-radius:5px;width:22px;height:22px;font-size:.75em;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+  font-family:sans-serif;font-weight:700;flex-shrink:0}
+.fs-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+#body{flex:1;display:flex;overflow:hidden;position:relative}
+#mapWrap{flex:1;position:relative;overflow:hidden}
+svg#mapSvg{width:100%;height:100%;display:block}
+.rd-lbl{fill:#3a3020;font-size:7px;font-family:'Noto Sans TC',sans-serif}
+.a-lbl{fill:#2e2618;font-size:10px;font-family:'Noto Serif TC',serif;font-weight:700}
+.a-en{fill:#2e2618;font-size:8px;font-family:'DM Serif Display',serif;font-style:italic}
+.w-lbl{fill:#1a3a50;font-size:10px;font-family:'DM Serif Display',serif;font-style:italic}
+.trail{stroke:var(--red);stroke-width:2.2;fill:none;stroke-dasharray:7,5;opacity:.55;animation:dash 18s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-200}}
+.pin-g{cursor:pointer}
+.p-ring{fill:none;stroke:var(--muted);stroke-width:1.5;transition:stroke .2s}
+.p-dot{fill:var(--sf2);transition:fill .2s}
+.p-emoji{font-size:13px;dominant-baseline:central;text-anchor:middle;user-select:none}
+.p-name{fill:var(--muted);font-size:7.5px;font-family:'Noto Sans TC',sans-serif;font-weight:500;text-anchor:middle;transition:fill .2s}
+.pin-g:hover .p-ring,.pin-g.active .p-ring{stroke:var(--red2)}
+.pin-g:hover .p-dot,.pin-g.active .p-dot{fill:#1e0e06}
+.pin-g:hover .p-name,.pin-g.active .p-name{fill:var(--cream)}
+.pin-g.cmp .p-ring{stroke:var(--green2)}
+.pin-g.cmp .p-dot{fill:#081408}
+.pin-g.cmp .p-name{fill:var(--green2)}
+.pr{fill:none;stroke:var(--red);stroke-width:1.5;opacity:0;animation:pA 2.4s ease-out infinite;animation-play-state:paused}
+.pr.go{animation-play-state:running}
+@keyframes pA{0%{r:14;opacity:.65}65%{r:24;opacity:0}100%{r:24;opacity:0}}
+
+#sidebar{width:58px;background:var(--sf);border-left:1px solid var(--bd);
+  display:flex;flex-direction:column;align-items:center;padding:7px 0 10px;gap:4px;
+  overflow-y:auto;flex-shrink:0;z-index:50}
+.sb-lbl{font-size:.5em;letter-spacing:2px;text-transform:uppercase;color:var(--muted);width:100%;text-align:center;margin-bottom:1px}
+.sb-btn{width:42px;height:46px;border-radius:8px;border:1.5px solid var(--bd);
+  background:var(--sf2);color:var(--muted);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;transition:all .2s;flex-shrink:0;position:relative;font-family:'Noto Sans TC',sans-serif}
+.sb-btn .si{font-size:1.07em;line-height:1}
+.sb-btn .sn{font-size:.5em;font-weight:700;letter-spacing:.5px;line-height:1}
+.sb-btn:hover{border-color:var(--gold);color:var(--gold);background:#201c10}
+.sb-btn.active{border-color:var(--red2);background:#200a04;color:var(--red2)}
+.sb-btn.cmp-b{border-color:var(--green2);background:#061008;color:var(--green2)}
+.sb-btn.cmp-b::after{content:'✓';position:absolute;top:3px;right:4px;font-size:.5em;color:var(--green2);font-weight:700}
+
+/* ── SHEET ── */
+#sheet{position:absolute;bottom:0;left:0;right:0;background:var(--sf);
+  border-top:1px solid var(--bd);border-radius:16px 16px 0 0;
+  transform:translateY(100%);transition:transform .36s cubic-bezier(.32,0,.2,1);
+  z-index:300;max-height:82dvh;display:flex;flex-direction:column;
+  box-shadow:0 -10px 40px rgba(0,0,0,.55)}
+#sheet.open{transform:translateY(0)}
+.sh-handle{width:34px;height:4px;background:var(--bd);border-radius:2px;margin:9px auto 0;flex-shrink:0}
+#shHead{padding:9px 13px 8px;border-bottom:1px solid var(--bd);display:flex;align-items:flex-start;gap:10px;flex-shrink:0}
+#shEmoji{font-size:1.71em;line-height:1;margin-top:2px}
+.sh-m{flex:1}
+#shNum{font-size:.64em;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:2px}
+#shTitle{font-family:'Noto Serif TC',serif;font-size:1.21em;font-weight:900;color:var(--cream);line-height:1.15}
+#shEn{font-family:'DM Serif Display',serif;font-style:italic;font-size:.71em;color:var(--muted);margin-top:2px}
+#shClose{background:none;border:none;color:var(--muted);font-size:1.28em;cursor:pointer;padding:0 2px;align-self:flex-start}
+#shBody{padding:11px 13px 28px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+
+.sec-hd{font-size:.64em;letter-spacing:2.5px;text-transform:uppercase;color:var(--red);
+  font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:7px}
+.sec-hd::after{content:'';flex:1;height:1px;background:var(--bd)}
+.sec-txt{font-size:.89em;line-height:1.85;color:#a89880;margin-bottom:13px}
+.tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:15px}
+.tag{font-size:.68em;padding:2px 8px;border-radius:20px;border:1px solid var(--bd);color:var(--muted)}
+
+.tc{background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:11px 12px;margin-bottom:10px}
+.tc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:7px}
+.tc-title{font-family:'Noto Serif TC',serif;font-size:.89em;font-weight:700;color:var(--cream);line-height:1.35;flex:1}
+.tc-badge{font-size:.61em;padding:2px 7px;border-radius:10px;white-space:nowrap;background:var(--red);color:#fff;flex-shrink:0;margin-top:2px}
+.tc-badge.m{background:var(--gold);color:#1a0f00}
+.tc-badge.f{background:var(--green);color:#fff}
+.tc-body{font-size:.86em;line-height:1.8;color:#7a6e5c}
+
+/* ── PHOTO REMINDER — green box, NO button ── */
+.photo-box{margin-top:10px;background:#0d1a0e;border:1px solid #2a4a2a;border-radius:10px;overflow:hidden}
+.photo-box-hd{display:flex;align-items:center;gap:7px;padding:8px 12px;
+  border-bottom:1px solid #1e3a1e;background:#0a1408}
+.photo-box-hd-txt{font-size:.71em;letter-spacing:1.5px;text-transform:uppercase;color:var(--green2);font-weight:700}
+.photo-box-body{padding:10px 12px}
+.photo-what{font-size:.86em;line-height:1.75;color:#8abf8a;margin-bottom:8px}
+.photo-what b{color:var(--cream)}
+.photo-remind{background:#0a1e0c;border:1px dashed #2d5a2d;border-radius:8px;
+  padding:9px 12px;font-size:.86em;line-height:1.7;color:var(--green2)}
+.remind-tag{display:inline-block;background:#1a3a1a;border:1px solid var(--green2);
+  border-radius:6px;padding:2px 8px;font-size:.86em;font-weight:700;color:var(--green2);
+  margin-top:4px;letter-spacing:.5px}
+
+/* ── TEXT OBS ── */
+.obs-block{background:#0a0806;border:1px solid var(--bd);border-radius:10px;margin-top:10px;overflow:hidden}
+.obs-hd{padding:8px 12px 7px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:6px}
+.obs-hd-txt{font-size:.71em;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-weight:700}
+.obs-txt-wrap{padding:8px 12px 4px}
+.obs-ta{width:100%;background:transparent;border:none;color:var(--cream);
+  font-size:.93em;font-family:'Noto Sans TC',sans-serif;padding:4px 0 6px;
+  resize:none;outline:none;line-height:1.65;min-height:72px}
+.obs-ta::placeholder{color:#3a3028}
+.share-area{padding:6px 12px 12px;border-top:1px solid var(--bd)}
+.share-tip{font-size:.75em;color:var(--muted);line-height:1.6;margin-bottom:9px;padding-top:7px}
+.sh-btn{width:100%;padding:11px 6px;border:none;border-radius:8px;font-size:.89em;font-weight:700;
+  cursor:pointer;transition:all .2s;font-family:'Noto Sans TC',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  background:var(--wx);color:#fff}
+.sh-btn:hover{background:#06ad56}
+.cp-ok{font-size:.79em;color:var(--green2);margin-top:7px;display:none;text-align:center}
+.cp-ok.show{display:block}
+
+.done-wrap{margin-top:16px}
+.btn-done{width:100%;padding:13px;border:none;border-radius:10px;background:var(--red);
+  color:#fff;font-family:'Noto Sans TC',sans-serif;font-size:1em;font-weight:700;
+  letter-spacing:1px;cursor:pointer;transition:all .2s}
+.btn-done:hover{background:#b82e18}
+.btn-done.cmp{background:var(--green);cursor:default}
+
+#toast{position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  background:rgba(14,11,7,.9);color:var(--txt);font-size:.79em;
+  padding:6px 14px;border-radius:18px;border:1px solid var(--bd);
+  pointer-events:none;z-index:200;white-space:nowrap;transition:opacity .3s;
+  max-width:calc(100% - 80px);text-align:center}
+#toast.fade{opacity:0}
+</style>
+</head>
+<body>
+
+<!-- ══ SPLASH ══ -->
+<div id="splash">
+  <div class="sp-eye" id="sp-eye">香港中西区 · 城市寻迹</div>
+  <div class="sp-title">人口<em>&</em>政策<br>探索之旅</div>
+  <div class="sp-sub" id="sp-sub">Population & Policy Trail · Central → Sai Ying Pun</div>
+  <div class="sp-stats">
+    <div class="sp-stat"><span class="v">8</span><span class="l" id="sp-s1">站点</span></div>
+    <div class="sp-stat"><span class="v">2–3h</span><span class="l" id="sp-s2">时长</span></div>
+    <div class="sp-stat"><span class="v">~3km</span><span class="l" id="sp-s3">步行</span></div>
+  </div>
+  <p class="sp-desc" id="sp-desc">从中环大馆出发，途经永利街、英皇书院同学会小学、文武庙、荷里活道、西港城、高升街，抵达西营盘中山纪念公园。以人口学与政策视角，解读香港开埠至今的移民、居住与社会演变。</p>
+  <div class="sp-lang">
+    <button class="lang-btn on" onclick="setLang('zh')">简体</button>
+    <button class="lang-btn" onclick="setLang('yue')">廣東話</button>
+    <button class="lang-btn" onclick="setLang('en')">English</button>
+  </div>
+  <div class="group-wrap">
+    <span class="group-label" id="grp-lbl">📋 请输入你的组别编号</span>
+    <div class="group-input-row">
+      <span class="group-prefix" id="grp-pre">第</span>
+      <input class="group-num" type="number" id="groupNum" min="1" max="99" placeholder="?" oninput="onGroupInput()">
+      <span class="group-suffix" id="grp-suf">组</span>
+    </div>
+  </div>
+  <button class="btn-start" id="sp-btn" onclick="startApp()" disabled>开始探索 →</button>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app" style="display:none">
+  <div id="hdr">
+    <div class="hdr-l">
+      <h1 id="hdr-t">中西区人口探索之旅</h1>
+      <p id="hdr-s">HK CENTRAL & SAI YING PUN · POPULATION TRAIL</p>
+    </div>
+    <div class="hdr-r">
+      <div id="grpBadge">第?组</div>
+      <div class="hl-wrap">
+        <button class="hl-btn on" onclick="setLang('zh')">简</button>
+        <button class="hl-btn" onclick="setLang('yue')">粵</button>
+        <button class="hl-btn" onclick="setLang('en')">EN</button>
+      </div>
+      <!-- font size -->
+      <div class="fs-wrap">
+        <button class="fs-btn" onclick="changeFont(-1)" title="缩小字体">A-</button>
+        <button class="fs-btn" onclick="changeFont(1)" title="放大字体">A+</button>
+      </div>
+      <div id="progPill">0 / 6</div>
+    </div>
+  </div>
+
+  <div id="body">
+    <div id="mapWrap">
+      <div id="toast">👈 点击右侧站点开始</div>
+      <svg id="mapSvg" viewBox="0 0 720 540" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="dots" width="18" height="18" patternUnits="userSpaceOnCoordinates">
+            <circle cx="1" cy="1" r=".7" fill="#1e1a14" opacity=".5"/>
+          </pattern>
+          <linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#091825"/><stop offset="100%" stop-color="#06121c"/>
+          </linearGradient>
+          <linearGradient id="hg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#161210"/><stop offset="100%" stop-color="#0e0b07"/>
+          </linearGradient>
+        </defs>
+        <rect width="720" height="540" fill="#0e0b07"/>
+        <rect width="720" height="540" fill="url(#dots)" opacity=".5"/>
+        <ellipse cx="148" cy="82" rx="175" ry="118" fill="url(#hg)" opacity=".7"/>
+        <ellipse cx="538" cy="67" rx="208" ry="128" fill="url(#hg)" opacity=".7"/>
+        <text x="146" y="76" text-anchor="middle" class="a-lbl" font-size="8.5" fill="#2a2218">太平山</text>
+        <text x="535" y="61" text-anchor="middle" class="a-lbl" font-size="8.5" fill="#2a2218">西高山</text>
+        <rect x="0" y="418" width="720" height="122" fill="url(#wg)"/>
+        <path d="M50 440 Q180 433 310 440 Q440 447 570 440 Q640 436 700 440" stroke="#0c2030" stroke-width=".9" fill="none" opacity=".5"/>
+        <path d="M30 460 Q200 453 370 460 Q530 467 700 460" stroke="#0c2030" stroke-width=".9" fill="none" opacity=".35"/>
+        <text x="360" y="483" text-anchor="middle" class="w-lbl">Victoria Harbour</text>
+        <text x="360" y="500" text-anchor="middle" fill="#1a3a50" font-size="10" font-family="Noto Sans TC" font-weight="300">維多利亞港</text>
+        <rect x="155" y="298" width="24" height="34" rx="2" fill="#141010" stroke="#1e1a14" stroke-width="1"/>
+        <rect x="181" y="306" width="17" height="26" rx="2" fill="#141010" stroke="#1e1a14" stroke-width="1"/>
+        <rect x="155" y="336" width="21" height="17" rx="2" fill="#121010" stroke="#1e1a14" stroke-width="1"/>
+        <rect x="367" y="288" width="21" height="29" rx="2" fill="#141010" stroke="#1e1a14" stroke-width="1"/>
+        <rect x="390" y="293" width="15" height="24" rx="2" fill="#141010" stroke="#1e1a14" stroke-width="1"/>
+        <rect x="568" y="280" width="19" height="24" rx="2" fill="#141010" stroke="#1e1a14" stroke-width="1"/>
+        <rect x="590" y="284" width="14" height="20" rx="2" fill="#141010" stroke="#1e1a14" stroke-width="1"/>
+        <path d="M28 308 Q178 298 308 292 Q428 286 558 281 Q648 277 712 274" stroke="#1e1a14" stroke-width="11" fill="none" stroke-linecap="round"/>
+        <path d="M28 308 Q178 298 308 292 Q428 286 558 281 Q648 277 712 274" stroke="#252015" stroke-width="1" fill="none"/>
+        <text x="368" y="280" text-anchor="middle" class="rd-lbl">皇后大道 Queen's Road</text>
+        <path d="M52 366 Q218 358 358 354 Q488 351 628 348 Q678 347 712 346" stroke="#1e1a14" stroke-width="7" fill="none"/>
+        <text x="375" y="342" text-anchor="middle" class="rd-lbl">德輔道 Des Voeux Road</text>
+        <path d="M28 256 Q118 248 213 243 Q328 236 448 233 Q558 231 658 234 Q688 236 712 238" stroke="#181510" stroke-width="4.5" fill="none" stroke-dasharray="4,3"/>
+        <text x="368" y="228" text-anchor="middle" class="rd-lbl">般咸道 Bonham Road</text>
+        <line x1="208" y1="212" x2="208" y2="398" stroke="#1e1a14" stroke-width="4"/>
+        <line x1="313" y1="214" x2="313" y2="400" stroke="#1e1a14" stroke-width="4"/>
+        <line x1="433" y1="216" x2="433" y2="402" stroke="#1e1a14" stroke-width="4"/>
+        <line x1="558" y1="218" x2="558" y2="406" stroke="#1e1a14" stroke-width="4"/>
+        <line x1="653" y1="220" x2="653" y2="410" stroke="#1e1a14" stroke-width="4"/>
+        <path d="M62 380 Q328 372 590 368 Q648 367 712 366" stroke="#2a4a2a" stroke-width="2.5" fill="none" opacity=".75"/>
+        <text x="128" y="367" fill="#2a4a2a" font-size="7" font-family="Noto Sans TC">🚃 電車</text>
+        <rect x="198" y="392" width="30" height="12" rx="3" fill="#5a0000" opacity=".8"/>
+        <text x="213" y="400.5" text-anchor="middle" fill="#ff9980" font-size="6" font-family="Noto Sans TC">中環</text>
+        <rect x="424" y="390" width="34" height="12" rx="3" fill="#5a0000" opacity=".8"/>
+        <text x="441" y="398.5" text-anchor="middle" fill="#ff9980" font-size="6" font-family="Noto Sans TC">上環</text>
+        <rect x="645" y="388" width="40" height="12" rx="3" fill="#5a0000" opacity=".8"/>
+        <text x="665" y="396.5" text-anchor="middle" fill="#ff9980" font-size="6" font-family="Noto Sans TC">西營盤</text>
+        <text x="208" y="200" text-anchor="middle" class="a-lbl">中環</text>
+        <text x="208" y="211" text-anchor="middle" class="a-en">Central</text>
+        <text x="488" y="198" text-anchor="middle" class="a-lbl">上環</text>
+        <text x="488" y="209" text-anchor="middle" class="a-en">Sheung Wan</text>
+        <text x="668" y="197" text-anchor="middle" class="a-lbl">西營盤</text>
+        <text x="668" y="208" text-anchor="middle" class="a-en">Sai Ying Pun</text>
+        <path d="M208 320 L255 317 L295 315 L340 312 L390 309 L450 305 L510 302 L600 297 L645 294" class="trail"/>
+        <g transform="translate(688,36)">
+          <circle cx="0" cy="0" r="15" fill="#141008" stroke="#252015" stroke-width="1.5"/>
+          <text x="0" y="-5" text-anchor="middle" fill="#d4341a" font-size="8" font-weight="700">N</text>
+          <line x1="0" y1="-3" x2="0" y2="-11" stroke="#d4341a" stroke-width="1.5"/>
+          <text x="0" y="11" text-anchor="middle" fill="#4a4030" font-size="7">S</text>
+          <text x="-10" y="4" text-anchor="middle" fill="#4a4030" font-size="7">W</text>
+          <text x="10" y="4" text-anchor="middle" fill="#4a4030" font-size="7">E</text>
+        </g>
+        <g transform="translate(20,413)">
+          <line x1="0" y1="0" x2="52" y2="0" stroke="#3a3020" stroke-width="1.5"/>
+          <line x1="0" y1="-3" x2="0" y2="3" stroke="#3a3020" stroke-width="1.5"/>
+          <line x1="52" y1="-3" x2="52" y2="3" stroke="#3a3020" stroke-width="1.5"/>
+          <text x="26" y="-5" text-anchor="middle" fill="#3a3020" font-size="7">500m</text>
+        </g>
+        <g class="pin-g" id="pin0" onclick="pinClick(0)"><circle class="pr go" cx="208" cy="320" r="14"/><circle class="p-dot" cx="208" cy="320" r="15"/><circle class="p-ring" cx="208" cy="320" r="15"/><text class="p-emoji" x="208" y="320">⚖️</text><text class="p-name" x="208" y="340" id="pn0">大館</text></g>
+        <g class="pin-g" id="pin1" onclick="pinClick(1)"><circle class="pr" cx="255" cy="317" r="14"/><circle class="p-dot" cx="255" cy="317" r="15"/><circle class="p-ring" cx="255" cy="317" r="15"/><text class="p-emoji" x="255" y="317">🏘️</text><text class="p-name" x="255" y="337" id="pn1">永利街</text></g>
+        <g class="pin-g" id="pin2" onclick="pinClick(2)"><circle class="pr" cx="295" cy="315" r="14"/><circle class="p-dot" cx="295" cy="315" r="15"/><circle class="p-ring" cx="295" cy="315" r="15"/><text class="p-emoji" x="295" y="315">🏫</text><text class="p-name" x="295" y="335" id="pn2">英皇書院</text></g>
+        <g class="pin-g" id="pin3" onclick="pinClick(3)"><circle class="pr" cx="340" cy="312" r="14"/><circle class="p-dot" cx="340" cy="312" r="15"/><circle class="p-ring" cx="340" cy="312" r="15"/><text class="p-emoji" x="340" y="312">🛕</text><text class="p-name" x="340" y="332" id="pn3">文武廟</text></g>
+        <g class="pin-g" id="pin4" onclick="pinClick(4)"><circle class="pr" cx="390" cy="309" r="14"/><circle class="p-dot" cx="390" cy="309" r="15"/><circle class="p-ring" cx="390" cy="309" r="15"/><text class="p-emoji" x="390" y="309">🛍️</text><text class="p-name" x="390" y="329" id="pn4">荷里活道</text></g>
+        <g class="pin-g" id="pin5" onclick="pinClick(5)"><circle class="pr" cx="450" cy="305" r="14"/><circle class="p-dot" cx="450" cy="305" r="15"/><circle class="p-ring" cx="450" cy="305" r="15"/><text class="p-emoji" x="450" y="305">🏛️</text><text class="p-name" x="450" y="325" id="pn5">西港城</text></g>
+        <g class="pin-g" id="pin6" onclick="pinClick(6)"><circle class="pr" cx="510" cy="302" r="14"/><circle class="p-dot" cx="510" cy="302" r="15"/><circle class="p-ring" cx="510" cy="302" r="15"/><text class="p-emoji" x="510" y="302">🌿</text><text class="p-name" x="510" y="322" id="pn6">高升街</text></g>
+        <g class="pin-g" id="pin7" onclick="pinClick(7)"><circle class="pr" cx="645" cy="294" r="14"/><circle class="p-dot" cx="645" cy="294" r="15"/><circle class="p-ring" cx="645" cy="294" r="15"/><text class="p-emoji" x="645" y="294">🌳</text><text class="p-name" x="645" y="314" id="pn7">紀念公園</text></g>
+      </svg>
+    </div>
+
+    <div id="sidebar">
+      <div class="sb-lbl" id="sb-lbl">站點</div>
+      <button class="sb-btn" id="sb0" onclick="sideClick(0)"><span class="si">⚖️</span><span class="sn">01</span></button>
+      <button class="sb-btn" id="sb1" onclick="sideClick(1)"><span class="si">🏘️</span><span class="sn">02</span></button>
+      <button class="sb-btn" id="sb2" onclick="sideClick(2)"><span class="si">🏫</span><span class="sn">03</span></button>
+      <button class="sb-btn" id="sb3" onclick="sideClick(3)"><span class="si">🛕</span><span class="sn">04</span></button>
+      <button class="sb-btn" id="sb4" onclick="sideClick(4)"><span class="si">🛍️</span><span class="sn">05</span></button>
+      <button class="sb-btn" id="sb5" onclick="sideClick(5)"><span class="si">🏛️</span><span class="sn">06</span></button>
+      <button class="sb-btn" id="sb6" onclick="sideClick(6)"><span class="si">🌿</span><span class="sn">07</span></button>
+      <button class="sb-btn" id="sb7" onclick="sideClick(7)"><span class="si">🌳</span><span class="sn">08</span></button>
+    </div>
+
+    <div id="sheet">
+      <div class="sh-handle"></div>
+      <div id="shHead">
+        <div id="shEmoji">⚖️</div>
+        <div class="sh-m">
+          <div id="shNum">站點 01/06</div>
+          <div id="shTitle">大館</div>
+          <div id="shEn">Tai Kwun · Former Central Police Station</div>
+        </div>
+        <button id="shClose" onclick="closeSheet()">✕</button>
+      </div>
+      <div id="shBody"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// FONT SIZE
+// ══════════════════════════════════════════
+const FONT_STEPS = [12,13,14,15,16,17,18];
+let fontIdx = 2; // default 14px
+function changeFont(dir) {
+  fontIdx = Math.max(0, Math.min(FONT_STEPS.length-1, fontIdx+dir));
+  document.documentElement.style.setProperty('--fs', FONT_STEPS[fontIdx]+'px');
+}
+
+// ══════════════════════════════════════════
+// TRANSLATIONS
+// ══════════════════════════════════════════
+const T = {
+  zh: {
+    eye:'香港中西区 · 城市寻迹',
+    sub:'Population & Policy Trail · Central → Sai Ying Pun',
+    s1:'站点', s2:'时长', s3:'步行',
+    desc:'从中环大馆出发，途经永利街、英皇书院同学会小学、文武庙、荷里活道、西港城、高升街，抵达西营盘中山纪念公园。以人口学与政策视角，解读香港开埠至今的移民、居住与社会演变。',
+    start:'开始探索 →',
+    grpLbl:'📋 请输入你的组别编号', grpPre:'第', grpSuf:'组',
+    grpBadge: n => `第${n}组`,
+    hdrT:'中西区人口探索之旅', hdrS:'HK CENTRAL & SAI YING PUN · POPULATION TRAIL',
+    sbLbl:'站点',
+    secBg:'地点介绍', secPol:'人口与政策分析', secTask:'站点任务',
+    photoHd:'📷 拍照任务',
+    photoWhat: w => `<b>拍摄内容：</b>${w}`,
+    photoRemind: (grp, loc) => `📲 拍完后请直接发到微信群，并注明：<br><span class="remind-tag">📍 ${grp} · ${loc}</span>`,
+    obsHd:'✍️ 文字记录',
+    obsPh:'填写你的观察、数据或思考……',
+    shareTip:'点下方按钮复制文字 → 打开微信群 → 长按输入框粘贴发送',
+    wxBtn:'复制文字（发微信群）',
+    cpOk:'✓ 已复制！打开微信群粘贴即可',
+    doneBtn:'✅ 完成此站，前往下一站',
+    doneDone:'✓ 已完成此站点',
+    toastStart:'👈 点击右侧站点开始',
+    toastSel: t => `已选：${t}`,
+    toastDone:'🎉 恭喜完成全部八个站点！',
+    pins:['大馆','永利街','英皇书院','文武庙','荷里活道','西港城','高升街','纪念公园'],
+    b:{ req:'必完成', obs:'人口观察', ext:'延伸探索', dat:'数据收集', pol:'政策分析', ref:'延伸思考', fin:'🎉终点', sum:'最终任务' }
+  },
+  // ── 繁體廣東話 ──
+  yue: {
+    eye:'香港中西區 · 城市尋跡',
+    sub:'人口同政策探索之旅 · 中環 → 西營盤',
+    s1:'站點', s2:'時長', s3:'步行',
+    desc:'由中環大館出發，途經永利街、英皇書院同學會小學、文武廟、荷里活道、西港城、高升街，抵達西營盤中山紀念公園。以人口學同政策角度，了解香港由開埠至今嘅移民、居住同社會演變。',
+    start:'開始探索 →',
+    grpLbl:'📋 請輸入你嘅組別編號', grpPre:'第', grpSuf:'組',
+    grpBadge: n => `第${n}組`,
+    hdrT:'中西區人口探索之旅', hdrS:'香港中環至西營盤 · 人口政策路線',
+    sbLbl:'站點',
+    secBg:'地點介紹', secPol:'人口同政策分析', secTask:'站點任務',
+    photoHd:'📷 影相任務',
+    photoWhat: w => `<b>影相內容：</b>${w}`,
+    photoRemind: (grp, loc) => `📲 影完之後請直接發去微信群，並註明：<br><span class="remind-tag">📍 ${grp} · ${loc}</span>`,
+    obsHd:'✍️ 文字記錄',
+    obsPh:'填寫你嘅觀察、數據或諗法……',
+    shareTip:'撳下面按鈕複製文字 → 打開微信群 → 長按輸入欄貼上發送',
+    wxBtn:'複製文字（發微信群）',
+    cpOk:'✓ 已複製！打開微信群貼上即可',
+    doneBtn:'✅ 完成此站，前往下一站',
+    doneDone:'✓ 已完成此站點',
+    toastStart:'👈 點擊右側站點開始',
+    toastSel: t => `已選：${t}`,
+    toastDone:'🎉 恭喜完成全部八個站點！',
+    pins:['大館','永利街','英皇書院','文武廟','荷里活道','西港城','高升街','紀念公園'],
+    b:{ req:'必完成', obs:'人口觀察', ext:'延伸探索', dat:'數據收集', pol:'政策分析', ref:'延伸思考', fin:'🎉終點', sum:'最終任務' }
+  },
+  en: {
+    eye:'HK Central & Sai Ying Pun · City Trail',
+    sub:'Population & Policy Trail · Central → Sai Ying Pun',
+    s1:'Stops', s2:'Duration', s3:'Walking',
+    desc:"From Tai Kwun in Central, passing Wing Lee Street, King's College Alumni PS, Man Mo Temple, Hollywood Road, Western Market, Ko Shing Street, to Sun Yat-sen Memorial Park. A 2–3 hour walk through Hong Kong's population and policy history.",
+    start:'Start Exploring →',
+    grpLbl:'📋 Enter your group number', grpPre:'Group', grpSuf:'',
+    grpBadge: n => `Group ${n}`,
+    hdrT:'HK Population & Policy Trail', hdrS:'CENTRAL & SAI YING PUN · HONG KONG',
+    sbLbl:'Stops',
+    secBg:'About This Place', secPol:'Population & Policy Analysis', secTask:'Tasks',
+    photoHd:'📷 Photo Task',
+    photoWhat: w => `<b>Photograph:</b> ${w}`,
+    photoRemind: (grp, loc) => `📲 After taking the photo, share it directly to your WeChat group and include:<br><span class="remind-tag">📍 ${grp} · ${loc}</span>`,
+    obsHd:'✍️ Written Record',
+    obsPh:'Enter your observations, data, or reflections…',
+    shareTip:'Tap below to copy text → open WeChat group → long-press input to paste',
+    wxBtn:'Copy Text (Share to WeChat)',
+    cpOk:'✓ Copied! Paste it into your WeChat group.',
+    doneBtn:'✅ Complete This Stop → Next',
+    doneDone:'✓ Stop Completed',
+    toastStart:'👈 Tap a stop on the right to begin',
+    toastSel: t => `Selected: ${t}`,
+    toastDone:'🎉 All 8 stops completed!',
+    pins:['Tai Kwun','Wing Lee St','King\'s College','Man Mo Temple','Hollywood Road','Western Market','Ko Shing St','Memorial Park'],
+    b:{ req:'Required', obs:'Observe', ext:'Explore', dat:'Data', pol:'Analysis', ref:'Reflect', fin:'🎉Final', sum:'Wrap-up' }
+  }
+};
+
+// ══════════════════════════════════════════
+// LOCATION DATA
+// ══════════════════════════════════════════
+const LOCS = [
+  // ══ 01 大馆 ══
+  {
+    emoji:'⚖️',
+    title:{zh:'大馆',yue:'大館',en:'Tai Kwun'},
+    ensub:'Tai Kwun · Former Central Police Station',
+    num:{zh:'站点 01 / 08',yue:'站點 01 / 08',en:'Stop 01 / 08'},
+    bg:{
+      zh:'大馆前身为中央警署建筑群，建于1841至1925年间，由警察总部、裁判司署及域多利监狱三部分组成，是香港现存规模最大的殖民地时期建筑群。2018年活化后成为艺术与文化中心。馆内展览明确指出，监狱的历史与香港的「人口迁移及增加」息息相关——每一波移民潮，都带来了新的人口管控需要，也带来了更多被拘押者。',
+      yue:'大館前身為中央警署建築群，建於1841至1925年間，由警察總部、裁判司署及域多利監獄三部分組成，係香港現存規模最大嘅殖民地時期建築群。2018年活化後成為藝術文化中心。館內展覽明確指出，監獄嘅歷史與香港嘅「人口遷移及增加」息息相關——每一波移民潮，都帶來咗新嘅人口管控需要，亦帶來咗更多被拘押者。',
+      en:'Tai Kwun was formerly the Central Police Station compound (1841–1925), comprising the Police Headquarters, Central Magistracy, and Victoria Prison — the largest surviving colonial-era complex in Hong Kong. Revitalized in 2018 as an arts and culture centre. Its own exhibition notes that the prison\'s history was directly tied to Hong Kong\'s "population migration and growth" — every new migrant wave brought new demands for control, and more people behind bars.'
+    },
+    policy:{
+      zh:'大馆是殖民人口管控的空间缩影。殖民政府以法律与警力管控华人移民——缺乏法律保护的劳工随时面临拘押。尤其1970年代末起，监狱更被用来关押等待遣返的越南船民及大批内地非法入境者，成为香港移民政策执行的最前线。监狱的功能多次更名，折射出香港人口构成与移民政策的不断演变。',
+      yue:'大館係殖民人口管控嘅空間縮影。殖民政府以法律與警力管控華人移民——缺乏法律保護嘅勞工隨時面臨拘押。尤其1970年代末起，監獄更被用嚟關押等待遣返嘅越南船民及大批內地非法入境者，成為香港移民政策執行嘅最前線。監獄嘅功能多次更名，折射出香港人口構成與移民政策嘅不斷演變。',
+      en:'Tai Kwun is a spatial microcosm of colonial population control. The government used law and police force to manage Chinese migrants — labourers without legal protection faced detention at any time. From the late 1970s, the prison was also used to hold Vietnamese boat people and mainland illegal immigrants awaiting repatriation, making it the frontline of immigration policy enforcement. Its repeated renamings reflect Hong Kong\'s evolving population composition and migration policy.'
+    },
+    tags:['殖民管治','人口遷移','移民管控','監獄與政策'],
+    tasks:[
+      {
+        title:{zh:'🏆 抢先找到：牢房铁门或铁窗格',yue:'🏆 搶先搵到：牢房鐵門或鐵窗格',en:'🏆 Race to Find: A Prison Cell Door or Iron Bar Window'},
+        badge:'req',
+        photoWhat:{
+          zh:'域多利监狱牢房区的铁门或铁窗格。走进大馆院落，沿右侧往旧监狱楼方向走，牢房铁门/铁窗格清晰可见。全组在铁门前合照，先发群！',
+          yue:'域多利監獄牢房區嘅鐵門或鐵窗格。行入大館院落，沿右側往舊監獄樓方向行，牢房鐵門/鐵窗格清晰可見。全組喺鐵門前合照，先發群！',
+          en:'The iron cell doors or barred windows of Victoria Prison. Enter Tai Kwun, head right toward the old prison block — cell iron doors and windows are clearly visible. Group photo in front, first to send wins!'
+        },
+        body:{
+          zh:'殖民政府用监狱管控无法律保护的华人移民劳工——这扇铁门背后关押的，正是那些被视为「可随时遣返」的流动人口。这是族裔隔离与人口管控政策最直接的物理体现：华人无需完整审判即可被拘押，欧洲人则受不同法律保护。',
+          yue:'殖民政府用監獄管控冇法律保護嘅華人移民勞工——呢扇鐵門背後關押嘅，正係嗰啲被視為「可隨時遣返」嘅流動人口。呢係族裔隔離與人口管控政策最直接嘅物理體現：華人無需完整審判即可被拘押，歐洲人則受不同法律保護。',
+          en:'The colonial government used this prison to control Chinese migrant labourers with no legal protection — those iron bars held people treated as "disposable, deportable" mobile population. This is the most direct physical embodiment of ethnic segregation and population control policy: Chinese could be detained without full trial, while Europeans operated under different legal protections.'
+        },
+        hasText:false
+      },
+      {
+        title:{zh:'🔍 找展板：大馆功用的变迁',yue:'🔍 搵展板：大館功用嘅變遷',en:'🔍 Find the Exhibition Panel: How Tai Kwun\'s Function Changed'},
+        badge:'obs',
+        photoWhat:{
+          zh:'大馆内有展板专门介绍「世纪变迁」，记录监狱功用如何随人口政策演变而改变。找到这块展板，拍下展板全貌发群。',
+          yue:'大館內有展板專門介紹「世紀變遷」，記錄監獄功用如何隨人口政策演變而改變。搵到呢塊展板，拍低展板全貌發群。',
+          en:'Tai Kwun has an exhibition panel titled "Centuries of Change" documenting how the prison\'s function changed with population policy. Find this panel and photograph it to share.'
+        },
+        body:{
+          zh:'拍下展板发群。然后填写：\n根据展板内容：1970年代末，大馆（域多利监狱）的主要功用是什么？关押的是哪类人口？',
+          yue:'拍低展板發群。然後填寫：\n根據展板內容：1970年代末，大館（域多利監獄）嘅主要功用係咩？關押嘅係邊類人口？',
+          en:'Photo the panel and share it. Then fill in:\nAccording to the exhibition: what was Tai Kwun\'s (Victoria Prison\'s) main function in the late 1970s? What population was being detained?'
+        },
+        hasText:true, obsKey:'obs_0'
+      }
+    ]
+  },
+  {
+    emoji:'🏘️',
+    title:{zh:'永利街',yue:'永利街',en:'Wing Lee Street'},
+    ensub:'Wing Lee Street · Sheung Wan',
+    num:{zh:'站点 02 / 08',yue:'站點 02 / 08',en:'Stop 02 / 08'},
+    bg:{
+      zh:'永利街是上环一条安静的后街，保留着九幢建于1950年代初的唐楼，是全港保存最完整的战后唐楼群之一。这里因电影《岁月神偷》取景而广为人知。然而今日的永利街，已完成政府主导的整体活化——楼宇外貌保留，内部全面翻新，成为品质住宅与小型商铺。',
+      yue:'永利街係上環一條安靜嘅後街，保留著九幢建於1950年代初嘅唐樓，係全港保存最完整嘅戰後唐樓群之一。呢度因電影《歲月神偷》取景而廣為人知。然而今日嘅永利街，已完成政府主導嘅整體活化——樓宇外貌保留，內部全面翻新，成為品質住宅與小型商鋪。',
+      en:'Wing Lee Street is a quiet back lane in Sheung Wan with nine Tong Lau tenements built in the early 1950s — one of the most intact post-war clusters in Hong Kong, made famous by the film "Echoes of the Rainbow". Today, the street has undergone government-led revitalisation — facades preserved, interiors fully renovated, now home to quality residences and boutique shops.'
+    },
+    policy:{
+      zh:'永利街的活化是香港政府「建筑保育」与「居住环境改善」政策的典型案例。唐楼从过度拥挤的移民住所，经过政策介入，转型为有价值的文化遗产与优质居住空间。这个转变背后，是居住政策从「救急」（公屋兴建）到「提质」（活化保育）的历史演变——但也引发了「谁能住在这里」的阶层置换问题。',
+      yue:'永利街嘅活化係香港政府「建築保育」與「居住環境改善」政策嘅典型案例。唐樓由過度擁擠嘅移民住所，經過政策介入，轉型為有價值嘅文化遺產與優質居住空間。呢個轉變背後，係居住政策由「救急」（公屋興建）到「提質」（活化保育）嘅歷史演變——但亦引發咗「邊個能住喺度」嘅階層置換問題。',
+      en:'Wing Lee Street\'s revitalisation is a textbook case of Hong Kong\'s "heritage conservation" and "housing environment improvement" policies. Tong Lau buildings transformed from overcrowded migrant dwellings to valued heritage and quality residences through policy intervention — a shift from "emergency response" (public housing) to "quality improvement" (conservation). But it also raises the question: who can actually live here now?'
+    },
+    tags:['居住環境','活化政策','唐樓保育','階層置換'],
+    tasks:[
+      {
+        title:{zh:'🏆 抢先拍：永利街标志性唐楼排列正面全景',yue:'🏆 搶先影：永利街標誌性唐樓排列正面全景',en:'🏆 Race to Shoot: The Iconic Full Frontal Row of Wing Lee Street Tong Lau'},
+        badge:'req',
+        photoWhat:{
+          zh:'站在永利街中段，拍下一整排唐楼外墙立面——保留原有建筑外观、整齐排列的砖面与窗格是关键。全组在楼前合照，先发群！',
+          yue:'企喺永利街中段，拍低一整排唐樓外牆立面——保留原有建築外觀、整齊排列嘅磚面與窗格係關鍵。全組喺樓前合照，先發群！',
+          en:'Stand in the middle of Wing Lee Street and photograph the full row of Tong Lau facades — the preserved original brickwork and window grids are key. Group photo in front, first to send wins!'
+        },
+        body:{
+          zh:'这些楼宇的外观，记录了1950年代大批内地移民南来后香港的居住现实。今日内部已全面翻新，住的早已不是当年的移民家庭。外表相同，内里已变——这正是政府活化政策的空间效果：保留历史外壳，替换居住人口。',
+          yue:'呢啲樓宇嘅外觀，記錄咗1950年代大批內地移民南來後香港嘅居住現實。今日內部已全面翻新，住嘅早已唔係當年嘅移民家庭。外表相同，內裡已變——呢正係政府活化政策嘅空間效果：保留歷史外殼，替換居住人口。',
+          en:'These facades document the housing reality of Hong Kong after the massive influx of mainland migrants in the 1950s. Inside, everything has been renovated — the original migrant families are long gone. Same exterior, transformed interior: this is exactly the spatial effect of government revitalisation policy — preserve the historical shell, replace the population.'
+        },
+        hasText:false
+      },
+      {
+        title:{zh:'政府「改善居住」之后：谁留下了？',yue:'政府「改善居住」之後：邊個留低咗？',en:'After Government "Housing Improvement": Who Gets to Stay?'},
+        badge:'ref',
+        photoWhat:{
+          zh:'永利街街道全景或建筑细节，体现今日面貌',
+          yue:'永利街街道全景或建築細節，體現今日面貌',
+          en:'Wing Lee Street streetscape or architectural detail showing its current state'
+        },
+        body:{
+          zh:'拍下今日永利街，发到微信群。然后填写：\n政府的居住环境改善政策，同时也可能造成原有居民的被迫迁离——你认为，政策的目标应该是「改善建筑」还是「保护居民」？两者能同时实现吗？',
+          yue:'拍低今日永利街，發去微信群。然後填寫：\n政府嘅居住環境改善政策，同時亦可能造成原有居民嘅被迫遷離——你認為，政策嘅目標應該係「改善建築」定係「保護居民」？兩者能同時實現嗎？',
+          en:'Photo today\'s Wing Lee Street and share it. Then fill in:\nGovernment housing improvement policy can also displace original residents — do you think the goal should be "improving buildings" or "protecting residents"? Can both be achieved at the same time?'
+        },
+        hasText:true, obsKey:'obs_1'
+      }
+    ]
+  },
+  {
+    emoji:'🏫',
+    title:{zh:'英皇书院同学会小学',yue:'英皇書院同學會小學',en:"King's College Alumni Primary School"},
+    ensub:"King's College Old Boys' Association Primary School · Hollywood Road",
+    num:{zh:'站点 03 / 08',yue:'站點 03 / 08',en:'Stop 03 / 08'},
+    bg:{
+      zh:'英皇书院同学会小学位于荷里活道，由英皇书院旧生会于1949年创办，正是香港战后移民潮最汹涌的年代。学校的创立，是移民社会自发回应教育需求的典型——殖民政府教育资源严重不足，华人社群通过同学会、商会、宗教团体等民间力量自办学校，填补政府缺口。',
+      yue:'英皇書院同學會小學位於荷里活道，由英皇書院舊生會於1949年創辦，正係香港戰後移民潮最洶湧嘅年代。學校嘅創立，係移民社會自發回應教育需求嘅典型——殖民政府教育資源嚴重不足，華人社群透過同學會、商會、宗教團體等民間力量自辦學校，填補政府缺口。',
+      en:"King's College Old Boys' Association Primary School on Hollywood Road was founded in 1949 — at the height of Hong Kong's post-war migrant surge. Its founding is a classic example of migrant communities self-organising to meet educational needs: with colonial government resources badly lacking, Chinese communities used alumni associations, trade guilds, and religious groups to build their own schools."
+    },
+    policy:{
+      zh:'学校教育是人口政策的关键工具：决定谁的孩子能受教育，意味着决定谁能留在香港、谁能向上流动。战后香港的教育政策严重滞后于人口增长，催生了大批由民间承担的学校——这个「国家缺席、民间填补」的模式，与文武庙、东华医院的历史如出一辙。',
+      yue:'學校教育係人口政策嘅關鍵工具：決定邊個嘅孩子能受教育，意味著決定邊個能留喺香港、邊個能向上流動。戰後香港嘅教育政策嚴重滯後於人口增長，催生咗大批由民間承擔嘅學校——呢個「國家缺席、民間填補」嘅模式，與文武廟、東華醫院嘅歷史如出一轍。',
+      en:"Education is a key tool of population policy: deciding whose children get schooling means deciding who can stay in Hong Kong and who can move up socially. Post-war Hong Kong's education policy badly lagged population growth, producing waves of community-built schools — the same pattern of 'state absence, civil society filling the gap' seen at Man Mo Temple and Tung Wah Hospital."
+    },
+    tags:['教育政策','移民社群','民間辦學','人口流動'],
+    tasks:[
+      {
+        title:{zh:'📸 全组与学校合照',yue:'📸 全組與學校合照',en:'📸 Group Photo with the School'},
+        badge:'req',
+        photoWhat:{
+          zh:'全组站在英皇书院同学会小学正门/校名牌前合照，校名清晰可见。发到微信群！',
+          yue:'全組企喺英皇書院同學會小學正門/校名牌前合照，校名清晰可見。發去微信群！',
+          en:"Group photo in front of the school's main entrance or name plaque — school name clearly visible. Share to WeChat group!"
+        },
+        body:{
+          zh:'1949年，一批英皇书院旧生自掏腰包创办这间小学，因为他们知道：大批南来移民的孩子根本没有学校可读。这间学校的存在，是民间力量填补政府教育缺口的活生生证明。',
+          yue:'1949年，一批英皇書院舊生自掏腰包創辦呢間小學，因為佢哋知道：大批南來移民嘅孩子根本冇學校可讀。呢間學校嘅存在，係民間力量填補政府教育缺口嘅活生生證明。',
+          en:"In 1949, a group of King's College alumni funded this school themselves — because they knew that the children of masses of newly arrived migrants simply had nowhere to study. This school's existence is living proof of civil society filling the government's education gap."
+        },
+        hasText:false
+      }
+    ]
+  },
+  {
+    emoji:'🛕',
+    title:{zh:'文武庙',yue:'文武廟',en:'Man Mo Temple'},
+    ensub:'Man Mo Temple · Hollywood Road',
+    num:{zh:'站点 04 / 08',yue:'站點 04 / 08',en:'Stop 04 / 08'},
+    bg:{
+      zh:'文武庙建于1847年，供奉文昌帝君与关圣帝君，是香港开埠初期最重要的华人社区中心。庙宇不仅是宗教场所，更承担仲裁、立誓等准司法功能——在殖民法庭管辖有限的年代，华人社群通过神前誓言解决纠纷。庙内同时供奉天后娘娘，保佑出海渔民与移民平安。',
+      yue:'文武廟建於1847年，供奉文昌帝君與關聖帝君，係香港開埠初期最重要嘅華人社區中心。廟宇不僅係宗教場所，更承擔仲裁、立誓等準司法功能——喺殖民法庭管轄有限嘅年代，華人社群透過神前誓言解決糾紛。廟內同時供奉天后娘娘，保佑出海漁民與移民平安。',
+      en:'Built in 1847, Man Mo Temple is dedicated to the God of Literature and the God of War — the most important Chinese community hub in early colonial Hong Kong. It served as both religious site and quasi-judicial space for settling disputes through oaths. The temple also houses a shrine to Tin Hau (Empress of Heaven), protector of seafarers and migrants crossing the sea.'
+    },
+    policy:{
+      zh:'文武庙体现了殖民政府「以华治华」的人口管治逻辑：默许华人社区自治，换取社会稳定。庙宇管理委员会承担早期社会福利功能，为新移民提供援助。天后信仰则连接着更广阔的华南移民史——沿海移民渡海来港前必祭天后，天后庙的分布本身就是移民路线的宗教地图。',
+      yue:'文武廟體現咗殖民政府「以華治華」嘅人口管治邏輯：默許華人社區自治，換取社會穩定。廟宇管理委員會承擔早期社會福利功能，為新移民提供援助。天后信仰則連接著更廣闊嘅華南移民史——沿海移民渡海來港前必祭天后，天后廟嘅分佈本身就係移民路線嘅宗教地圖。',
+      en:'Man Mo Temple embodies the colonial logic of "governing Chinese through Chinese" — tolerating community self-governance in exchange for social stability. The temple committee provided early social welfare for new migrants. The Tin Hau cult connects to a broader South China migration history: coastal migrants crossing the sea to Hong Kong always offered prayers to Tin Hau first — the distribution of Tin Hau temples is itself a religious map of migration routes.'
+    },
+    tags:['以華治華','雙軌管治','天后信仰','移民互助'],
+    tasks:[
+      {
+        title:{zh:'🏆 抢先找到：庙内刻有捐款人名字的石碑或木匾',yue:'🏆 搶先搵到：廟內刻有捐款人名字嘅石碑或木匾',en:'🏆 Race to Find: A Stone Tablet or Wooden Plaque with Donor Names Inside'},
+        badge:'req',
+        photoWhat:{
+          zh:'文武庙内刻有人名与金额的捐款石碑或木匾——庙内两侧墙壁及走廊挂有多块记录历代捐款芳名的碑刻，清晰可见中文人名与数字。全组在石碑/木匾前合照，先发群！',
+          yue:'文武廟內刻有人名與金額嘅捐款石碑或木匾——廟內兩側牆壁及走廊掛有多塊記錄歷代捐款芳名嘅碑刻，清晰可見中文人名與數字。全組喺石碑/木匾前合照，先發群！',
+          en:'Donor name stone tablets or wooden plaques inside Man Mo Temple — along the side walls and corridors, multiple carved inscriptions record generations of donors with Chinese names and amounts. Group photo in front, first to send wins!'
+        },
+        body:{
+          zh:'这些捐款人名字，是「以华治华」双轨管治体系的物质证明：商人通过捐款换取社会地位与政治影响力，移民获得互助网络，但始终缺乏正式法律保护。',
+          yue:'呢啲捐款人名字，係「以華治華」雙軌管治體系嘅物質證明：商人透過捐款換取社會地位與政治影響力，移民獲得互助網絡，但始終缺乏正式法律保護。',
+          en:'These donor names are material proof of the "governing Chinese through Chinese" system: merchants exchanged donations for social status and political influence; migrants got mutual aid networks, but never formal legal protection.'
+        },
+        hasText:false
+      },
+      {
+        title:{zh:'🔍 找到天后娘娘的牌位——注意，她不一定叫「妈祖」',yue:'🔍 搵到天后娘娘嘅牌位——注意，佢唔一定叫「媽祖」',en:'🔍 Find the Shrine Nameplate of Tin Hau — Note: She May Not Be Called "Mazu"'},
+        badge:'obs',
+        photoWhat:{
+          zh:'庙内供奉着天后娘娘，但牌匾上的称谓可能是「天后」「天后元君」或其他名号，而非「妈祖」。仔细寻找，拍下牌位或牌匾上的文字。⚠️ 注意：请关掉闪光灯，保持肃穆。如有其他宗教信仰者不便入内，可在门外等候。',
+          yue:'廟內供奉著天后娘娘，但牌匾上嘅稱謂可能係「天后」「天后元君」或其他名號，而非「媽祖」。仔細尋找，拍低牌位或牌匾上嘅文字。⚠️ 注意：請關掉閃光燈，保持肅穆。如有其他宗教信仰者不便入內，可在門外等候。',
+          en:'The temple houses a shrine to Tin Hau, but the nameplate may read "Tin Hau", "Tin Hau Yuanjun", or another title — not necessarily "Mazu". Look carefully and photograph the nameplate or inscription text. ⚠️ Note: Please switch off flash and be respectful. Those of other faiths who prefer not to enter may wait outside.'
+        },
+        body:{
+          zh:'拍下牌匾文字发群。然后填写：\n天后是华南沿海移民出海前必祭的神明，保佑渡海平安——她的存在，把文武庙从一个「社区管治空间」延伸成了「移民迁徙的精神起点」。你们master program研究的是人口流动与社会政策，天后信仰和你们研究的人口迁移现象，有什么共同之处？',
+          yue:'拍低牌匾文字發群。然後填寫：\n天后係華南沿海移民出海前必祭嘅神明，保佑渡海平安——佢嘅存在，把文武廟由一個「社區管治空間」延伸成咗「移民遷徙嘅精神起點」。你哋master program研究嘅係人口流動與社會政策，天后信仰同你哋研究嘅人口遷移現象，有咩共同之處？',
+          en:'Photo the nameplate text and share it. Then fill in:\nTin Hau was the goddess that South China coastal migrants prayed to before crossing the sea — her presence extends Man Mo Temple from a "community governance space" into a "spiritual starting point for migration". Your master program studies population movement and social policy — what do you see in common between the Tin Hau cult and the migration phenomena you study?'
+        },
+        hasText:true, obsKey:'obs_3'
+      }
+    ]
+  },
+  {
+    emoji:'🛍️',
+    title:{zh:'荷里活道',yue:'荷里活道',en:'Hollywood Road'},
+    ensub:'Hollywood Road · Antiques & Old-Meets-New',
+    num:{zh:'站点 05 / 08',yue:'站點 05 / 08',en:'Stop 05 / 08'},
+    bg:{
+      zh:'从文武庙沿荷里活道往下走，这段路是香港新旧并存最浓缩的地带之一：古董铺、字画店、杂货店与精品咖啡厅、画廊、网红餐厅紧邻并排。荷里活道是香港开埠后第一条正式修建的道路，见证了上环从华人移民聚居地到当代文创区的转型。',
+      yue:'由文武廟沿荷里活道往下行，呢段路係香港新舊並存最濃縮嘅地帶之一：古董鋪、字畫店、雜貨店與精品咖啡廳、畫廊、網紅餐廳緊鄰並排。荷里活道係香港開埠後第一條正式修建嘅道路，見證咗上環由華人移民聚居地到當代文創區嘅轉型。',
+      en:"Walking down Hollywood Road from Man Mo Temple, this stretch is one of Hong Kong's most concentrated examples of old meeting new: antique shops, calligraphy dealers, and general stores sit right next to specialty cafés, galleries, and trendy restaurants. Hollywood Road was the first formally built road after Hong Kong's founding, witnessing Sheung Wan's transformation from a Chinese migrant quarter to a contemporary arts district."
+    },
+    policy:{
+      zh:'荷里活道的新旧并置，是绅士化（gentrification）人口置换过程最直观的视觉证据。这不是「自然演变」，而是政府土地与文化政策（如活化历史建筑计划）、旅游推广与资本流入共同驱动的人口结构转型——原有低收入移民商贩逐渐被中产消费业态取代。',
+      yue:'荷里活道嘅新舊並置，係紳士化（gentrification）人口置換過程最直觀嘅視覺證據。呢唔係「自然演變」，而係政府土地與文化政策（如活化歷史建築計劃）、旅遊推廣與資本流入共同驅動嘅人口結構轉型——原有低收入移民商販逐漸被中產消費業態取代。',
+      en:"Hollywood Road's old-meets-new juxtaposition is the most intuitive visual evidence of gentrification-driven population displacement. This is not 'natural evolution' but a demographic transformation driven by government land and cultural policy (such as the Revitalisation of Historic Buildings scheme), tourism promotion, and capital inflows — original low-income migrant traders gradually replaced by middle-class consumption businesses."
+    },
+    tags:['紳士化','新舊對比','文化政策','人口置換'],
+    tasks:[
+      {
+        title:{zh:'🏆 抢先找到：同一条街传统老铺与精品新店并排',yue:'🏆 搶先搵到：同一條街傳統老鋪與精品新店並排',en:'🏆 Race to Find: A Traditional Old Shop and Trendy New Business Side by Side'},
+        badge:'req',
+        photoWhat:{
+          zh:'荷里活道这段，找到一间几十年历史的传统老铺（古董、字画、杂货、药材等）与一间明显新开的精品店/咖啡厅/画廊紧邻并排。两家店同时入镜，先发群！',
+          yue:'荷里活道呢段，搵到一間幾十年歷史嘅傳統老鋪（古董、字畫、雜貨、藥材等）與一間明顯新開嘅精品店/咖啡廳/畫廊緊鄰並排。兩家店同時入鏡，先發群！',
+          en:'On this stretch of Hollywood Road, find a decades-old traditional shop (antiques, calligraphy, sundries, herbal medicine etc.) right next to a clearly new boutique/café/gallery. Both in the same frame, first to send wins!'
+        },
+        body:{
+          zh:'绅士化的过程是：地价上涨 → 租金上升 → 低收入移民商贩无法负担 → 撤离 → 中产新业态进驻。每一间新咖啡厅背后，都曾经是一个移民家庭的生计。',
+          yue:'紳士化嘅過程係：地價上漲 → 租金上升 → 低收入移民商販無法負擔 → 撤離 → 中產新業態進駐。每一間新咖啡廳背後，都曾經係一個移民家庭嘅生計。',
+          en:'Gentrification works like this: rising land values → rising rents → low-income migrant traders can no longer afford → they leave → middle-class businesses move in. Behind every new café was once a migrant family\'s livelihood.'
+        },
+        hasText:false
+      }
+    ]
+  },
+  {
+    emoji:'🏛️',
+    title:{zh:'西港城',yue:'西港城',en:'Western Market'},
+    ensub:'Western Market · Des Voeux Road Central',
+    num:{zh:'站点 06 / 08',yue:'站點 06 / 08',en:'Stop 06 / 08'},
+    bg:{
+      zh:'西港城建于1906年，是香港现存最古老的街市建筑之一，砖红色爱德华巴洛克外观至今保存完好。原是上环核心市集，服务着大批从广东、福建南来的商人与劳工。今日内部正在装修，但建筑本身与外墙上的历史路牌，仍是这段移民史的物质见证。',
+      yue:'西港城建於1906年，係香港現存最古老嘅街市建築之一，磚紅色愛德華巴洛克外觀至今保存完好。原係上環核心市集，服務著大批從廣東、福建南來嘅商人與勞工。今日內部正在裝修，但建築本身與外牆上嘅歷史路牌，仍係呢段移民史嘅物質見證。',
+      en:"Built in 1906, Western Market is one of Hong Kong's oldest surviving market buildings with its Edwardian Baroque red-brick facade intact. It originally served migrants from Guangdong and Fujian as their first urban foothold. The interior is currently under renovation, but the building itself and the old street signs on its exterior walls remain physical witnesses to this migration history."
+    },
+    policy:{
+      zh:'街市在人口政策中具有双重意义：既是移民社群自发形成的生存空间，也是政府记录流动人口、征税管控商业活动的工具。外墙上的历史路牌，是政府城市管理政策在空间上留下的痕迹——路名本身往往承载着殖民命名政治，记录着不同人口群体的历史痕迹。',
+      yue:'街市喺人口政策中具有雙重意義：既係移民社群自發形成嘅生存空間，亦係政府記錄流動人口、徵稅管控商業活動嘅工具。外牆上嘅歷史路牌，係政府城市管理政策在空間上留低嘅痕跡——路名本身往往承載著殖民命名政治，記錄著不同人口群體嘅歷史痕跡。',
+      en:"Marketplaces held dual significance: organic survival spaces for migrants, and government tools for recording mobile populations and controlling commerce. The old street signs on the exterior walls are spatial traces of government urban management policy — street names themselves often carry colonial naming politics, recording the historical presence of different population groups."
+    },
+    tags:['移民落腳點','街市政策','殖民命名','城市記錄'],
+    tasks:[
+      {
+        title:{zh:'🏆 抢先找到：西港城外墙上的旧路牌',yue:'🏆 搶先搵到：西港城外牆上嘅舊路牌',en:'🏆 Race to Find: The Old Street Signs on the Western Market Exterior Wall'},
+        badge:'req',
+        photoWhat:{
+          zh:'西港城外墙（德辅道中/干诺道中一侧）保留有一些年代感十足的旧式路牌，绿底白字风格。找到后全组合照，先发群！',
+          yue:'西港城外牆（德輔道中/干諾道中一側）保留有一些年代感十足嘅舊式路牌，綠底白字風格。搵到後全組合照，先發群！',
+          en:'The exterior wall of Western Market (facing Des Voeux Road / Connaught Road) has some old-style street signs with a distinctly vintage character — green background, white lettering. Find them, group photo, first to send wins!'
+        },
+        body:{
+          zh:'这些路牌记录的不只是街道名称，也是城市管理政策的痕迹——路名往往同时有英文与中文，反映殖民时期的双语行政体制，以及不同人口群体（华人移民 vs 欧洲殖民者）在城市空间中的命名权博弈。',
+          yue:'呢啲路牌記錄嘅不只係街道名稱，亦係城市管理政策嘅痕跡——路名往往同時有英文與中文，反映殖民時期嘅雙語行政體制，以及不同人口群體（華人移民 vs 歐洲殖民者）在城市空間中嘅命名權博弈。',
+          en:"These signs record more than street names — they're traces of urban management policy. Street names typically appear in both English and Chinese, reflecting the colonial bilingual administration system and the contest over naming rights in urban space between different population groups (Chinese migrants vs European colonisers)."
+        },
+        hasText:false
+      }
+    ]
+  },
+  {
+    emoji:'🏥',
+    title:{zh:'高升街',yue:'高升街',en:'Ko Shing Street'},
+    ensub:'Ko Shing Street · Sheung Wan',
+    num:{zh:'站点 07 / 08',yue:'站點 07 / 08',en:'Stop 07 / 08'},
+    bg:{
+      zh:'高升街是上环著名的「参茸燕窝街」，百年来聚集着大量出售中药材、参茸、干货的老字号商铺。这条街的形成，是华南移民自发聚集形成「同业街」的典型——相同背景的移民商贩在陌生城市中抱团，形成专业商业集群，既是生存策略，也是社群认同的空间表达。街道尽头，保良局郭罗桂珍护老院静静守候，见证着这一带老龄化人口的现实。',
+      yue:'高升街係上環著名嘅「參茸燕窩街」，百年來聚集著大量出售中藥材、參茸、乾貨嘅老字號商鋪。呢條街嘅形成，係華南移民自發聚集形成「同業街」嘅典型——相同背景嘅移民商販在陌生城市中抱團，形成專業商業集群，既係生存策略，亦係社群認同嘅空間表達。街道盡頭，保良局郭羅桂珍護老院靜靜守候，見證著呢一帶老齡化人口嘅現實。',
+      en:"Ko Shing Street is Sheung Wan's famous 'ginseng and bird's nest street' — a century-old concentration of shops selling Chinese medicine, dried goods, and specialty products. Its formation is a classic example of South China migrants spontaneously clustering into a 'trade street': merchants of similar backgrounds banded together in an unfamiliar city, forming a specialised commercial cluster as both a survival strategy and spatial expression of community identity. At the end of the street, the Po Leung Kuk Kwok Law Kwai Chun Home for the Elderly quietly stands witness to the neighbourhood's ageing reality."
+    },
+    policy:{
+      zh:'高升街的人口政策意涵有两层：①同业街的形成是移民人口自发进行「职业聚居」的结果——当政府没有为移民提供支援时，移民依靠地缘与业缘网络自救；②街道尽头的护老院，则折射出香港老龄化政策的现实：大批老龄移民需要专业照顾，保良局（本身就是殖民时期华人精英慈善体制的产物）承担了部分国家应有的养老责任。',
+      yue:'高升街嘅人口政策意涵有兩層：①同業街嘅形成係移民人口自發進行「職業聚居」嘅結果——當政府冇為移民提供支援時，移民依靠地緣與業緣網絡自救；②街道盡頭嘅護老院，則折射出香港老齡化政策嘅現實：大批老齡移民需要專業照顧，保良局（本身就係殖民時期華人精英慈善體制嘅產物）承擔咗部分國家應有嘅養老責任。',
+      en:"Ko Shing Street carries two layers of population policy significance: ①The trade street's formation is the result of migrants spontaneously 'occupational clustering' — when the government provided no support, migrants relied on geographic and trade networks for mutual aid; ②The care home at the end of the street reflects the reality of Hong Kong's ageing policy: large numbers of elderly migrants need professional care, and Po Leung Kuk (itself a product of the colonial Chinese elite philanthropy system) has taken on part of the state's elder care responsibility."
+    },
+    tags:['移民聚居','同業街','老齡化政策','慈善養老'],
+    tasks:[
+      {
+        title:{zh:'🏆 抢先找到：至少三间连续的同类药材/参茸铺',yue:'🏆 搶先搵到：至少三間連續嘅同類藥材/參茸鋪',en:'🏆 Race to Find: At Least Three Consecutive Similar Herbal Medicine / Ginseng Shops'},
+        badge:'req',
+        photoWhat:{
+          zh:'高升街上，拍下至少三间连续排列、经营同类商品（中药材/参茸/燕窝/干货）的老字号商铺——招牌风格相近，年代感十足。三间同时入镜，先发群！',
+          yue:'高升街上，拍低至少三間連續排列、經營同類商品（中藥材/參茸/燕窩/乾貨）嘅老字號商鋪——招牌風格相近，年代感十足。三間同時入鏡，先發群！',
+          en:'On Ko Shing Street, photograph at least three consecutive old-style shops selling similar goods (Chinese medicine/ginseng/bird\'s nest/dried products) — similar signage style, distinctly vintage feel. All three in the same frame, first to send wins!'
+        },
+        body:{
+          zh:'相同的移民群体，带着相同家乡的商业经验和货源渠道，聚集在同一条街——这是移民用「同业聚居」抵抗城市陌生感的方式，也是在政府缺乏支持时，移民凭借自身社会网络生存的策略。',
+          yue:'相同嘅移民群體，帶著相同家鄉嘅商業經驗和貨源渠道，聚集在同一條街——呢係移民用「同業聚居」抵抗城市陌生感嘅方式，亦係在政府缺乏支持時，移民憑藉自身社會網絡生存嘅策略。',
+          en:"Migrants of similar backgrounds, carrying the same hometown commercial experience and supply networks, clustered on the same street — this is how migrants used 'trade clustering' to resist urban alienation, and how they survived using their own social networks when government support was absent."
+        },
+        hasText:false
+      },
+      {
+        title:{zh:'📸 全组与保良局郭罗桂珍护老院合照 + 思考',yue:'📸 全組與保良局郭羅桂珍護老院合照 + 思考',en:'📸 Group Photo with Po Leung Kuk Kwok Law Kwai Chun Home for the Elderly + Reflection'},
+        badge:'ref',
+        photoWhat:{
+          zh:'高升街28号，保良局郭罗桂珍护老院。全组在护老院门口/院名牌前合照，院名清晰可见。发群！',
+          yue:'高升街28號，保良局郭羅桂珍護老院。全組喺護老院門口/院名牌前合照，院名清晰可見。發群！',
+          en:'Ko Shing Street 28, Po Leung Kuk Kwok Law Kwai Chun Home for the Elderly. Group photo in front of the entrance or name plaque — name clearly visible. Share!'
+        },
+        body:{
+          zh:'拍照发群。然后填写：\n保良局本身是殖民时代华人精英慈善体制的产物——政府不管，商人来管。今日这间护老院守护着高升街一带的老龄化移民人口。你认为，老年人的照顾责任，应该由政府承担，还是继续依赖像保良局这样的慈善机构？',
+          yue:'拍照發群。然後填寫：\n保良局本身係殖民時代華人精英慈善體制嘅產物——政府唔管，商人嚟管。今日呢間護老院守護著高升街一帶嘅老齡化移民人口。你認為，老年人嘅照顧責任，應該由政府承擔，定係繼續依賴像保良局咁嘅慈善機構？',
+          en:'Photo and share. Then fill in:\nPo Leung Kuk is itself a product of the colonial Chinese elite philanthropy system — government steps back, merchants step in. Today this care home looks after the ageing migrant population around Ko Shing Street. Do you think responsibility for elderly care should be carried by the government, or continue to rely on charities like Po Leung Kuk?'
+        },
+        hasText:true, obsKey:'obs_6'
+      }
+    ]
+  },
+  {
+    emoji:'🌳',
+    title:{zh:'中山纪念公园',yue:'中山紀念公園',en:'Sun Yat-sen Memorial Park'},
+    ensub:'Sun Yat-sen Memorial Park · Sai Ying Pun',
+    num:{zh:'站点 08 / 08',yue:'站點 08 / 08',en:'Stop 08 / 08'},
+    bg:{
+      zh:'中山纪念公园位于西营盘海滨，以孙中山先生命名。孙中山早年在香港接受教育，在西营盘一带策划革命。公园毗邻维多利亚港，见证了无数移民离港与返港的历史时刻，是社区居民的日常公共空间。',
+      yue:'中山紀念公園位於西營盤海濱，以孫中山先生命名。孫中山早年在香港接受教育，在西營盤一帶策劃革命。公園毗鄰維多利亞港，見證了無數移民離港與返港嘅歷史時刻，係社區居民嘅日常公共空間。',
+      en:"Sun Yat-sen Memorial Park sits on the Sai Ying Pun waterfront. Dr. Sun received his education in Hong Kong and planned revolutionary activities here. Overlooking Victoria Harbour, it witnessed countless migrants departing and returning — today it's an everyday public space for local residents."
+    },
+    policy:{
+      zh:'西营盘今日同时承受三股张力：①老龄化（传统老街坊）；②绅士化（精品咖啡厅替代传统商铺，中产迁入）；③新移民持续涌入。这三股力量如何共存，是未来香港人口政策的核心命题。',
+      yue:'西營盤今日同時承受三股張力：①老齡化（傳統老街坊）；②紳士化（精品咖啡廳替代傳統商鋪，中產遷入）；③新移民持續湧入。呢三股力量如何共存，係未來香港人口政策嘅核心命題。',
+      en:'Sai Ying Pun today faces three tensions: ①Ageing long-time residents; ②Gentrification (specialty cafés replacing traditional shops, middle-class influx); ③Continued new migrant arrivals. How these coexist is the central question for future population policy.'
+    },
+    tags:['移民離散','紳士化','人口老齡化','新舊社群共存'],
+    tasks:[
+      {
+        title:{zh:'🏆 抢先找到：公园旁同一条街上的粤语旧招牌与英文新招牌并排',yue:'🏆 搶先搵到：公園旁同一條街上嘅粵語舊招牌與英文新招牌並排',en:'🏆 Race to Find: Old Cantonese and New English Signage Side by Side Near the Park'},
+        badge:'fin',
+        photoWhat:{
+          zh:'中山纪念公园出口附近（西营盘正街/第一街/第二街），找到同一条街或同一幢楼，一块几十年历史的粤语繁体旧招牌与一块全英文或简体字新招牌紧邻并排。两块招牌同框，不拍人，先发群！',
+          yue:'中山紀念公園出口附近（西營盤正街/第一街/第二街），搵到同一條街或同一幢樓，一塊幾十年歷史嘅粵語繁體舊招牌與一塊全英文或簡體字新招牌緊鄰並排。兩塊招牌同框，唔影人，先發群！',
+          en:'Near the park exit (Sai Ying Pun Main Street / First Street / Second Street), find an old Cantonese traditional-character signboard sitting right next to a fully English or simplified-Chinese new sign — on the same street or building. Both in frame, no people needed, first to send wins!'
+        },
+        body:{
+          zh:'两块招牌之间的距离，是绅士化政策的空间单位——旧招牌代表老龄化的粤语移民社群，新招牌代表迁入的中产与新移民人口。这个并置，是香港人口结构转型最浓缩的视觉注脚。',
+          yue:'兩塊招牌之間嘅距離，係紳士化政策嘅空間單位——舊招牌代表老齡化嘅粵語移民社群，新招牌代表遷入嘅中產與新移民人口。呢個並置，係香港人口結構轉型最濃縮嘅視覺注腳。',
+          en:'The distance between two signs is the spatial unit of gentrification policy — the old sign represents the ageing Cantonese migrant community; the new sign represents incoming middle-class and new migrant populations. This juxtaposition is the most condensed visual footnote of Hong Kong\'s demographic transformation.'
+        },
+        hasText:false
+      },
+      {
+        title:{zh:'终点总结：走过八站，你们看到了什么？',yue:'終點總結：走過八站，你哋見到咗咩？',en:'Final Summary: After Eight Stops, What Did You See?'},
+        badge:'sum',
+        photoWhat:{
+          zh:'走完全程，选出今天最打动你的一张照片（来自任何一站），发群。',
+          yue:'走完全程，選出今日最打動你嘅一張照片（來自任何一站），發群。',
+          en:'After the full trail, choose the one photo from today that moved you most (from any stop) and share it.'
+        },
+        body:{
+          zh:'发出你的照片，小组讨论后填写：\n走过这八个站点，香港人口政策最核心的矛盾是什么？用一句话概括。',
+          yue:'發出你嘅照片，小組討論後填寫：\n走過呢八個站點，香港人口政策最核心嘅矛盾係咩？用一句話概括。',
+          en:'Share your photo, then discuss and fill in:\nAfter walking through all eight stops, what is the single most fundamental contradiction in Hong Kong\'s population policy? Summarise in one sentence.'
+        },
+        hasText:true, obsKey:'obs_7'
+      }
+    ]
+  }
+];
+
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let lang='zh', groupNum='', completed=new Set(), currentIdx=-1, obsData={};
+const G = id => document.getElementById(id);
+
+function onGroupInput(){
+  const v=G('groupNum').value.trim(); groupNum=v;
+  G('sp-btn').disabled=!v||isNaN(v)||parseInt(v)<1;
+}
+
+function setLang(l){
+  lang=l;
+  document.querySelectorAll('.lang-btn,.hl-btn').forEach(b=>{
+    const tx=b.textContent.trim();
+    const on=(l==='zh'&&(tx==='简体'||tx==='简'))||(l==='yue'&&(tx==='廣東話'||tx==='粵'))||(l==='en'&&(tx==='English'||tx==='EN'));
+    b.classList.toggle('on',on);
+  });
+  const t=T[l];
+  const sp=G('splash');
+  if(sp&&!sp.classList.contains('out')){
+    G('sp-eye').textContent=t.eye; G('sp-sub').textContent=t.sub;
+    G('sp-s1').textContent=t.s1; G('sp-s2').textContent=t.s2; G('sp-s3').textContent=t.s3;
+    G('sp-desc').textContent=t.desc; G('sp-btn').textContent=t.start;
+    G('grp-lbl').textContent=t.grpLbl; G('grp-pre').textContent=t.grpPre; G('grp-suf').textContent=t.grpSuf;
+  }
+  if(G('hdr-t')){
+    G('hdr-t').textContent=t.hdrT; G('hdr-s').textContent=t.hdrS; G('sb-lbl').textContent=t.sbLbl;
+    G('grpBadge').textContent=groupNum?t.grpBadge(groupNum):t.grpBadge('?');
+  }
+  LOCS.forEach((_,i)=>{const e=G('pn'+i);if(e)e.textContent=t.pins[i];});
+  showToast(t.toastStart);
+  if(currentIdx>=0&&G('sheet').classList.contains('open')) openSheet(currentIdx);
+}
+
+function startApp(){
+  groupNum=G('groupNum').value.trim(); if(!groupNum)return;
+  G('splash').classList.add('out');
+  setTimeout(()=>{G('splash').style.display='none';G('app').style.display='flex';G('grpBadge').textContent=T[lang].grpBadge(groupNum);},550);
+}
+
+function syncUI(idx){
+  for(let i=0;i<8;i++){
+    const pin=G('pin'+i),sb=G('sb'+i);
+    pin.classList.toggle('active',i===idx); pin.classList.toggle('cmp',completed.has(i));
+    sb.classList.toggle('active',i===idx); sb.classList.toggle('cmp-b',completed.has(i)&&i!==idx);
+    pin.querySelectorAll('.pr').forEach(r=>r.classList.toggle('go',i===idx));
+  }
+}
+function sideClick(idx){currentIdx=idx;syncUI(idx);showToast(T[lang].toastSel(LOCS[idx].title[lang]));openSheet(idx);}
+function pinClick(idx){sideClick(idx);}
+
+function openSheet(idx){
+  const loc=LOCS[idx],t=T[lang],isDone=completed.has(idx),grpStr=t.grpBadge(groupNum);
+  G('shEmoji').textContent=loc.emoji; G('shNum').textContent=loc.num[lang];
+  G('shTitle').textContent=loc.title[lang]; G('shEn').textContent=loc.ensub;
+
+  let html='';
+  html+=`<div class="sec-hd">${t.secBg}</div><p class="sec-txt">${loc.bg[lang]}</p>`;
+  html+=`<div class="sec-hd">${t.secPol}</div><p class="sec-txt">${loc.policy[lang]}</p>`;
+  html+=`<div class="tags">${loc.tags.map(tg=>`<span class="tag">${tg}</span>`).join('')}</div>`;
+  html+=`<div class="sec-hd">${t.secTask}</div>`;
+
+  loc.tasks.forEach((task,ti)=>{
+    const bk=task.badge,bc=(bk==='fin'||bk==='sum')?'f':(bk==='obs'||bk==='ext')?'m':'';
+    html+=`<div class="tc">
+      <div class="tc-top"><div class="tc-title">${task.title[lang]}</div><span class="tc-badge ${bc}">${t.b[bk]}</span></div>
+      <div class="tc-body">${task.body[lang].replace(/\n/g,'<br>')}</div>
+      <div class="photo-box">
+        <div class="photo-box-hd"><span class="photo-box-hd-txt">${t.photoHd}</span></div>
+        <div class="photo-box-body">
+          <div class="photo-what">${t.photoWhat(task.photoWhat[lang])}</div>
+          <div class="photo-remind">${t.photoRemind(grpStr,loc.title[lang])}</div>
+        </div>
+      </div>`;
+    if(task.hasText){
+      const key=task.obsKey,saved=obsData[key]||'';
+      html+=`<div class="obs-block">
+        <div class="obs-hd"><span class="obs-hd-txt">${t.obsHd}</span></div>
+        <div class="obs-txt-wrap"><textarea class="obs-ta" id="txt_${key}" placeholder="${t.obsPh}" onchange="obsData['${key}']=this.value">${saved}</textarea></div>
+        <div class="share-area">
+          <p class="share-tip">💡 ${t.shareTip}</p>
+          <button class="sh-btn" onclick="copyText('${key}',${idx},${ti})">💬 ${t.wxBtn}</button>
+          <div class="cp-ok" id="cpok_${key}">${t.cpOk}</div>
+        </div>
+      </div>`;
+    }
+    html+=`</div>`;
+  });
+
+  html+=`<div class="done-wrap"><button class="btn-done ${isDone?'cmp':''}" id="doneBtn" onclick="markDone(${idx})">${isDone?t.doneDone:t.doneBtn}</button></div>`;
+  G('shBody').innerHTML=html; G('sheet').classList.add('open');
+}
+
+function closeSheet(){
+  document.querySelectorAll('.obs-ta').forEach(el=>{obsData[el.id.replace('txt_','')]=el.value;});
+  G('sheet').classList.remove('open');
+}
+
+function copyText(key,locIdx,taskIdx){
+  const ta=G('txt_'+key); if(ta)obsData[key]=ta.value;
+  const loc=LOCS[locIdx],task=loc.tasks[taskIdx],t=T[lang],grpStr=t.grpBadge(groupNum);
+  const div='─'.repeat(22);
+  const text=`【中西區人口探索之旅】\n${grpStr} · ${loc.title[lang]} ${loc.num[lang]}\n${task.title[lang]}\n${div}\n${(obsData[key]||'').trim()||'（未填寫）'}\n${div}\n#人口政策探索 #中西區尋跡 #${grpStr}`;
+  navigator.clipboard.writeText(text).then(()=>showCpOk(key)).catch(()=>{
+    const el=document.createElement('textarea');el.value=text;el.style.cssText='position:fixed;opacity:0';
+    document.body.appendChild(el);el.focus();el.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(el);showCpOk(key);
+  });
+}
+function showCpOk(key){const el=G('cpok_'+key);if(!el)return;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),3500);}
+
+function markDone(idx){
+  completed.add(idx);
+  const btn=G('doneBtn');if(btn){btn.textContent=T[lang].doneDone;btn.classList.add('cmp');}
+  syncUI(-1); G('progPill').textContent=`${completed.size} / 8`;
+  if(completed.size===8)G('progPill').classList.add('done');
+  if(idx<7){setTimeout(()=>{closeSheet();setTimeout(()=>sideClick(idx+1),420);},900);}
+  else{setTimeout(()=>{closeSheet();G('toast').style.background='rgba(45,122,74,.9)';showToast(T[lang].toastDone);},900);}
+}
+
+let _tt;
+function showToast(msg){const t=G('toast');t.textContent=msg;t.classList.remove('fade');clearTimeout(_tt);_tt=setTimeout(()=>t.classList.add('fade'),3500);}
+let _sy=0;
+document.addEventListener('touchstart',e=>{_sy=e.touches[0].clientY;},{passive:true});
+document.addEventListener('touchend',e=>{if(!G('sheet').classList.contains('open'))return;if(e.changedTouches[0].clientY-_sy>65)closeSheet();},{passive:true});
+setLang('zh');
+</script>
+</body>
+</html>
